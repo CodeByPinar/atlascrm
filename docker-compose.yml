@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: atlascrm
+      POSTGRES_USER: atlascrm
+      POSTGRES_PASSWORD: atlascrm
+    ports:
+      - "5432:5432"
+    volumes:
+      - atlascrm_db:/var/lib/postgresql/data
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # Prisma
+      DATABASE_URL: postgresql://atlascrm:atlascrm@db:5432/atlascrm?schema=public
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+
+volumes:
+  atlascrm_db:

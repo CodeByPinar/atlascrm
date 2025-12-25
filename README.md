@@ -77,6 +77,37 @@ From `apps/web`:
 - `npx prisma migrate dev` → apply migrations in development
 - `npx prisma migrate deploy` → apply migrations in production
 
+## Docker
+
+### Build & run (with local Postgres)
+
+```bash
+docker compose up --build
+```
+
+This starts:
+
+- Web: http://localhost:3000
+- Postgres: localhost:5432 (user/pass/db: `atlascrm`)
+
+The container runs `prisma migrate deploy` on boot.
+
+### Stop
+
+```bash
+docker compose down
+```
+
+## Render Deploy
+
+This repo includes a `render.yaml` blueprint.
+
+1) In Render: **New** → **Blueprint** → select this GitHub repo
+2) Render provisions:
+	- a Postgres database (`atlascrm-db`)
+	- a web service built from the `Dockerfile`
+3) Deploy. The container automatically runs `prisma migrate deploy` on startup.
+
 ## Notes
 
 - `.env*` is gitignored by default (don’t commit secrets).
