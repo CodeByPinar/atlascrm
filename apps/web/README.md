@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AtlasCRM Web
 
-## Getting Started
+The web application for AtlasCRM — built with Next.js (App Router) + Prisma.
 
-First, run the development server:
+## Features
+
+- Modern admin panel modules: Leads (CRUD), Customers, Tasks, Billing, Users, Activities
+- Authentication flows: register, login, forgot/reset password
+- Multi-organization data model with role-based admin access
+
+## Tech Stack
+
+- Next.js 14 (App Router)
+- Prisma + PostgreSQL
+- TypeScript + Tailwind CSS
+
+## Prerequisites
+
+- Node.js (recommended: 18+)
+- A PostgreSQL database
+
+## Setup
+
+### 1) Install
+
+From this folder:
+
+```bash
+npm install
+```
+
+Or from repo root:
+
+```bash
+npm --prefix apps/web install
+```
+
+### 2) Environment
+
+Create `apps/web/.env` (this file is gitignored):
+
+```bash
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB?schema=public"
+```
+
+### 3) Database migrations
+
+```bash
+npx prisma migrate dev
+```
+
+### 4) Run dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` → start Next.js dev server
+- `npm run build` → `prisma generate` + production build
+- `npm run start` → run production server (after build)
+- `npm run lint` → lint
+- `npm run typecheck` → TypeScript typecheck
 
-## Learn More
+## Prisma Notes
 
-To learn more about Next.js, take a look at the following resources:
+- Prisma config lives in `prisma.config.ts` and requires `DATABASE_URL`.
+- If you add/rename models, regenerate the client:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npx prisma generate
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+If VS Code shows types like “Property 'lead' does not exist on PrismaClient”, restart the TypeScript server (and the dev server) after generating.
 
-## Deploy on Vercel
+## Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app` → Next.js routes (App Router)
+- `src/server` → server actions, auth, Prisma client
+- `prisma/schema.prisma` → data model
+- `prisma/migrations` → migrations
