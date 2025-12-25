@@ -1,0 +1,287 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  USER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+}
+
+enum CustomerStatus {
+  ACTIVE
+  PROSPECT
+  CHURN_RISK
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+  BLOCKED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ActivationCodeKind {
+  DEMO
+  PAID
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  WON
+  LOST
+}
+
+model Organization {
+  id        String       @id @default(cuid())
+  name      String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  members   Membership[]
+  customers Customer[]
+  tasks     Task[]
+  leads     Lead[]
+  activities Activity[]
+  auditLogs AuditLog[]
+
+  demoActivationCodes DemoActivationCode[]
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  name         String?
+  passwordHash String
+  isSuperAdmin Boolean      @default(false)
+  lastLoginAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  memberships  Membership[]
+  sessions     Session[]
+  passwordResetTokens PasswordResetToken[]
+
+  redeemedDemoActivationCodes DemoActivationCode[]
+
+  ownedCustomers Customer[] @relation("CustomerOwner")
+  ownedLeads     Lead[]     @relation("LeadOwner")
+  assignedTasks  Task[]     @relation("TaskAssignee")
+  activitiesAsActor Activity[] @relation("ActivityActor")
+  auditLogsAsActor  AuditLog[] @relation("AuditLogActor")
+}
+
+model Lead {
+  id             String     @id @default(cuid())
+  organizationId String
+  name           String
+  email          String?
+  phone          String?
+  company        String?
+  source         String?
+  status         LeadStatus @default(NEW)
+  ownerUserId    String?
+  lastActivityAt DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ownerUser      User?        @relation("LeadOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, status])
+  @@index([organizationId, ownerUserId])
+  @@index([organizationId, name])
+}
+
+model Membership {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  permissions    Json?
+  role           Role         @default(USER)
+  status         MembershipStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@index([organizationId])
+  @@index([organizationId, role])
+  @@index([organizationId, status])
+}
+
+model Customer {
+  id             String        @id @default(cuid())
+  organizationId String
+  name           String
+  email          String?
+  phone          String?
+  segment        String?
+  industry       String?
+  status         CustomerStatus @default(ACTIVE)
+  ownerUserId    String?
+  lastActivityAt DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ownerUser      User?         @relation("CustomerOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+
+  tasks          Task[]
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, status])
+  @@index([organizationId, ownerUserId])
+  @@index([organizationId, name])
+}
+
+model Task {
+  id             String       @id @default(cuid())
+  organizationId String
+  title          String
+  status         TaskStatus   @default(OPEN)
+  priority       TaskPriority @default(MEDIUM)
+  assigneeUserId String?
+  dueDate        DateTime?
+  customerId     String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  completedAt    DateTime?
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assigneeUser   User?        @relation("TaskAssignee", fields: [assigneeUserId], references: [id], onDelete: SetNull)
+  customer       Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, status])
+  @@index([organizationId, priority])
+  @@index([organizationId, assigneeUserId])
+  @@index([organizationId, dueDate])
+  @@index([organizationId, customerId])
+}
+
+model Activity {
+  id             String       @id @default(cuid())
+  organizationId String
+  actorUserId    String?
+  action         String
+  entityType     String
+  entityId       String
+  timestamp      DateTime     @default(now())
+  metadata       Json?
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actorUser      User?        @relation("ActivityActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, timestamp])
+  @@index([organizationId, entityType])
+  @@index([organizationId, actorUserId])
+}
+
+model AuditLog {
+  id             String       @id @default(cuid())
+  organizationId String
+  actorUserId    String?
+  action         String
+  entityType     String
+  entityId       String?
+  timestamp      DateTime     @default(now())
+  ipHash         String?
+  userAgent      String?
+  metadata       Json?
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actorUser      User?        @relation("AuditLogActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, timestamp])
+  @@index([organizationId, action])
+  @@index([organizationId, actorUserId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model ContactRequest {
+  id           String   @id @default(cuid())
+  name         String
+  email        String
+  company      String?
+  message      String
+  ipHash       String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([email])
+}
+
+model DemoActivationCode {
+  id               String   @id @default(cuid())
+  codeHash         String   @unique
+  kind             ActivationCodeKind @default(DEMO)
+  email            String
+  organizationId   String
+  expiresAt        DateTime
+  redeemedAt       DateTime?
+  redeemedByUserId String?
+  createdAt        DateTime @default(now())
+
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  redeemedByUser   User?        @relation(fields: [redeemedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([expiresAt])
+}

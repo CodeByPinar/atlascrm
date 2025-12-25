@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+.yarn/
+.pnpm-store/
+
+# Next.js
+.next/
+out/
+
+# Build outputs
+build/
+dist/
+coverage/
+
+# Env files
+.env*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Prisma (optional generated artifacts)
+**/src/generated/prisma/

@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+:root {
+  --background: #F5F7FA;
+  --foreground: #1F3A5F;
+
+  --atlas-blue: #1F3A5F;
+  --atlas-teal: #0EA5A4;
+  --atlas-cloud: #F5F7FA;
+  --atlas-steel: #6B7280;
+
+  --system-success: #16A34A;
+  --system-warning: #D97706;
+  --system-error: #DC2626;
+  --system-info: #2563EB;
+}
+
+@theme {
+  --color-atlas-blue: var(--atlas-blue);
+  --color-atlas-teal: var(--atlas-teal);
+  --color-atlas-cloud: var(--atlas-cloud);
+  --color-atlas-steel: var(--atlas-steel);
+  --color-system-success: var(--system-success);
+  --color-system-warning: var(--system-warning);
+  --color-system-error: var(--system-error);
+  --color-system-info: var(--system-info);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
